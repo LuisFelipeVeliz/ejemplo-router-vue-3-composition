@@ -1,36 +1,31 @@
 <script setup>
-import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
-import { ref } from 'vue';
+import { useGetData } from '@/composables/getData';
+import { useFavoritosStore } from '@/stores/favoritos';
 
 const route = useRoute();
 const router = useRouter();
+const useFavoritos = useFavoritosStore();
 
-const poke = ref({});
+const { add, findPoke } = useFavoritos;
 
 const back = () => {
     router.push('/pokemons');
 }
 
-const getData = async () => {
-    try {
-        const { data } = await axios.get(`https://pokeapi.co/api/v2/pokemon/${route.params.name}`);
-        poke.value = data;
-    } catch (error) {
-        console.log(error);
-        poke.value = null;
-    }
-}
+const { data, getData, loading, error } = useGetData();
 
-getData();
+getData(`https://pokeapi.co/api/v2/pokemon/${route.params.name}`); 
 </script>
 
 <template>
-    <div v-if="poke" class="text-center">
-        <img :src="poke.sprites?.front_shiny" alt="">
+    <p v-if="loading">Cargando información...</p>
+    <div class="alert alert-danger mt-2" v-if="error">{{ error }}</div>
+    <div v-if="data" class="text-center">
+        <img :src="data.sprites?.front_shiny" alt="">
         <h2>Poke name: {{ $route.params.name }}</h2>
+        <button :disabled="findPoke(data.name)" @click="add(data)" class="btn btn-outline-danger mb-2">agregar favorito</button>
     </div>
-    <h2 v-else>No existe el pokémon</h2>
     <div class="text-center mt-2">
         <button @click="back" class="btn btn-outline-dark">volver</button>
     </div>
